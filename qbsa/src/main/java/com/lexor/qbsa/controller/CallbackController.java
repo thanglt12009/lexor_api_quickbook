@@ -4,6 +4,8 @@ import com.intuit.oauth2.exception.OAuthException;
 import com.lexor.qbsa.domain.Configurations;
 import com.lexor.qbsa.repository.ConfigurationsRepository;
 import com.lexor.qbsa.util.Utility;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.logging.Level;
 
@@ -19,6 +21,7 @@ import java.util.logging.Logger;
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.Response;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name = "callback")
@@ -33,9 +36,10 @@ public class CallbackController {
 
     @GET
     @Produces("application/json")
-    public String getToken(@Context final HttpServletRequest request, @Context HttpServletRequest req) throws OAuthException {
-        HttpSession session = req.getSession(true);
+    public Response getToken(@Context final HttpServletRequest request) throws OAuthException, URISyntaxException {
+        HttpSession session = request.getSession(true);
         String csrfToken = (String) session.getAttribute("csrfToken");
+        String target = (String) session.getAttribute("target");
         String state = request.getParameter("state");
         String realmId = request.getParameter("realmId");
         String authCode = request.getParameter("code");
@@ -57,6 +61,10 @@ public class CallbackController {
                 LOG.log(Level.SEVERE, "{0}", ex);
             }
         }
-        return "ok now!";
+        if (target == null) {
+            return Response.ok("{\"status\":\"ok\"}").build();
+        } else {
+            return Response.temporaryRedirect(new URI(target)).build();
+        }
     }
 }

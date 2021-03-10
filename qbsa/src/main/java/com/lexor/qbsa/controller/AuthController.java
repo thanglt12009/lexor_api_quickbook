@@ -2,6 +2,7 @@ package com.lexor.qbsa.controller;
 
 import com.intuit.oauth2.exception.OAuthException;
 import com.lexor.qbsa.util.Utility;
+import java.net.URI;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -21,15 +22,16 @@ public class AuthController {
 
     @GET
     @Path("renew")
-    public String renewAuth() throws URISyntaxException, OAuthException {
+    public Response renewAuth(@Context HttpServletRequest req) throws URISyntaxException, OAuthException {
         Utility.renew();
-        return "renew ok!";
+        return Response.ok("{\"status\":\"ok\"}").build();
     }
 
     @GET
     public Response requestAuthentication(@Context HttpServletRequest req) throws URISyntaxException {
         HttpSession session= req.getSession(true);
-        Response res = Utility.auth(session);
+        String target = req.getParameter("target");
+        Response res = Utility.auth(session, target);
         if (res == null) {
             res = Response.serverError().build();
         }

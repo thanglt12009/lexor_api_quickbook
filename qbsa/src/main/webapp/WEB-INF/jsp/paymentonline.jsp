@@ -9,7 +9,7 @@
         <meta name="description" content="">
         <meta name="author" content="">
 
-        <title>Accept Sample App</title>
+        <title>Lexor payment page</title>
 
         <!-- Bootstrap core CSS -->
         <link href="/qbsa/static/js/authorizenet/scripts/bootstrap.min.css" rel="stylesheet">
@@ -127,15 +127,15 @@
         <script src="/qbsa/static/js/authorizenet/scripts/bootstrap.min.js"></script>
         <script src="/qbsa/static/js/authorizenet/scripts/jquery.cookie.js"></script>
 
-        <script src="https://sandbox-assets.secure.checkout.visa.com/checkout-widget/resources/js/integration/v1/sdk.js"></script>
+        <!--<script src="https://sandbox-assets.secure.checkout.visa.com/checkout-widget/resources/js/integration/v1/sdk.js"></script>-->
         <script src="https://includestest.ccdc02.com/cardinalcruise/v1/songbird.js"></script>
         <script src="https://jstest.authorize.net/v1/Accept.js"></script>
         <script src="https://jstest.authorize.net/v3/acceptUI.js"></script>
         <script src="/qbsa/static/js/authorizenet/acceptJSCaller.js"></script>
         <!--        <script th:src="@{/static/js/authorizenet/applePayCaller.js}"></script>-->
-        <script th:src="/qbsa/static/js/authorizenet/chargeProfile.js"></script>
-        <script th:src="/qbsa/static/js/authorizenet/payerAuthCaller.js"></script>
-        <script th:src="/qbsa/static/js/authorizenet/visaCheckoutTransaction.js"></script>
+        <!--<script th:src="/qbsa/static/js/authorizenet/chargeProfile.js"></script>-->
+        <!--<script th:src="/qbsa/static/js/authorizenet/payerAuthCaller.js"></script>-->
+        <!--<script th:src="/qbsa/static/js/authorizenet/visaCheckoutTransaction.js"></script>-->
 
         <script type="text/javascript">
 
@@ -268,7 +268,7 @@
                 $("#samplePayDiv").hide();
                 $("#addPayDiv").hide();
                 $("#addShipDiv").hide();
-                //$("body").css("background",""); $("body").css("background","url('scripts/background.png')");
+
                 switch (target) {
                     case "#home" 		:
                         $("#home").show();
@@ -440,7 +440,7 @@
 
     </head>
 
-    <body style=" background: url('/qbsa/static/js/authorizenet/scripts/background.png'); padding-top: 50px;">
+    <body>
 
         <input type='hidden' id='cardinalRequestJwt' value='123456'>
 
@@ -449,7 +449,7 @@
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container-fluid navbar-centered">
                     <ul class="nav navbar-nav" style="margin-top: 0px; margin-bottom:0px; margin-left:auto">
-                        <li role="presentation"><a href="#pay" data-toggle="tab">PAY</a></li>
+                        <li role="presentation"><a href="#pay" data-toggle="tab">PAYMENT PAGE</a></li>
                     </ul>
                 </div>
             </div>
@@ -459,7 +459,7 @@
                 <div class="modal-dialog" style="display: inline-block; vertical-align: middle;">
                     <div class="modal-content">
                         <div class="modal-header" id="acceptJSReceiptHeader">
-                            <h4 class="modal-title">ACCEPT.JS RECEIPT</h4>
+                            <h4 class="modal-title">PAYMENT RECEIPT</h4>
                         </div>
                         <div class="modal-body" id="acceptJSReceiptBody">
                         </div>
@@ -468,33 +468,31 @@
             </div>
         </div>
 
+        <div class="tab-content panel-group">
 
-        <div id="payerAuthReceiptModal" class="modal fade" role="dialog">
-            <div class="modal-dialog" style="display: inline-block; vertical-align: middle;">
-                <div class="modal-content">
-                    <div class="modal-header" id="payerAuthReceiptHeader">
-                        <h4 class="modal-title">3D-SECURE RECEIPT</h4>
-                    </div>
-                    <div class="modal-body" id="payerAuthReceiptBody">
-                    </div>
+            <div class="tab-pane" id="pay"></div>
+
+            <div class="panel panel-info tab-pane center-block" id="samplePayDiv" style="width:50%">
+                <div class="panel-heading">
+                    <h3 class="panel-title text-center"><b>Lexor payment page</b></h3>
                 </div>
-            </div>
-        </div>
-
-
-        <!-- Modal -->
-        <div id="acceptJSPayModal" class="modal fade" role="dialog">
-            <div class="modal-dialog" style="display: inline-block; vertical-align: middle;">
-                <!-- Modal content-->
-                <div class="modal-content">
-
-                    <div class="modal-header">
-                        <h4 class="modal-title">ACCEPT.JS EXAMPLE</h4>
+                <div class="panel-body">
+                    <div class="row" id="payment_methods">
+                        <div class="form-group col-xs-12">
+                            <label style="display: block;">Payment methods</label>
+                            <label for="credit_card_method" class="radio-inline"><input type="radio" id="credit_card_method" name="paymentMethod" value="creditcard" checked>Credit Card</label>
+                            <label for="echeck_method" class="radio-inline"><input type="radio" id="echeck_method" name="paymentMethod" value="echeck">eCheck</label>
+                        </div>
+                        <button class="AcceptUI  hidden btn btn-primary btn-lg col-md-3 col-sm-offset-1 col-sm-4 col-xs-offset-2 col-xs-8"
+                                style="font-weight: bolder; font-size: 24px; margin-top: 10px; margin-bottom: 10px"
+                                type="button" id="acceptUIPayButton"
+                                data-billingaddressoptions="{&quot;show&quot;:true, &quot;required&quot;:true}"
+                                data-apiloginid="${it.apiLoginID}"
+                                data-clientkey="${it.clientKey}"
+                                data-acceptuiformbtntxt="Subscribe"
+                                data-acceptuiformheadertxt="Payment Information" data-responsehandler="responseHandler">Pay (Accept UI)</button>
                     </div>
-
-                    <div class="modal-body" id="acceptJSPayBody">
-                        <!--form role="form"-->
-
+                    <div class="row" id="creditcard_form">
                         <div class="form-group col-xs-8">
                             <label for="creditCardNumber">CREDIT CARD NUMBER</label>
                             <input type="tel" class="form-control" id="creditCardNumber" placeholder="4111111111111111" value="4111111111111111" autocomplete="off"/>
@@ -503,176 +501,93 @@
                             <label for="cvv">CVV</label>
                             <input type="text" class="form-control" id="cvv" placeholder="123" autocomplete="off"/>
                         </div>
-
-                        <div>
-
-                            <div class="form-group col-xs-5">
-                                <label for="expiryDateYY">EXP. DATE</label>
-                                <input type="text" class="form-control" id="expiryDateYY" placeholder="YYYY"/>
-                            </div>
-
-                            <div class="form-group col-xs-3">
-                                <label for="expiryDateMM" style="opacity: 0">MONTH</label>
-                                <input type="text" class="form-control" id="expiryDateMM" placeholder="MM"/>
-                            </div>
-
-
-                            <div class="form-group col-xs-4">
-                                <label for="amount">AMOUNT</label>
-                                <input type="text" class="form-control" id="amount" placeholder="0.5"/>
-                            </div>
-                            <div class="form-group col-xs-4">
-                                <label for="customer">Customer Id</label>
-                                <input type="text" class="form-control" id="customer" placeholder="Customer id"/>
-                            </div>
-                            <div class="form-group col-xs-4">
-                                <label for="invoice">Invoice Id</label>
-                                <input type="text" class="form-control" id="invoice" placeholder="Invoice id"/>
-                            </div>
-
-
+                        <div class="form-group col-xs-5">
+                            <label for="expiryDateYY">EXP. DATE</label>
+                            <input type="text" class="form-control" id="expiryDateYY" placeholder="YYYY"/>
                         </div>
-
+                        <div class="form-group col-xs-3">
+                            <label for="expiryDateMM" style="opacity: 0">MONTH</label>
+                            <input type="text" class="form-control" id="expiryDateMM" placeholder="MM"/>
+                        </div>
+                        <div class="form-group col-xs-4">
+                            <label for="amount">AMOUNT</label>
+                            <input type="text" class="form-control" id="amount" placeholder="0.5"/>
+                        </div>
+                        <div class="form-group col-xs-8">
+                            <label for="fullName">Full name</label>
+                            <input type="text" class="form-control" id="fullName" placeholder="Your full name"/>
+                        </div>
+                        <div class="form-group col-xs-4">
+                            <label for="zip" style="opacity: 0">Zip code</label>
+                            <input type="text" class="form-control" id="zip" placeholder="Your zip code"/>
+                        </div>
                         <!--/form-->
                         <div style="text-align: center; margin-top: 20%;">
                             <button type="button" id="submitButton" class="btn btn-primary" style="width: 95%;">SUBMIT</button>
                         </div>
-
                     </div>
-
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal -->
-        <div id="payerAuthPayModal" class="modal fade" role="dialog">
-            <div class="modal-dialog" style="display: inline-block; vertical-align: middle;">
-                <!-- Modal content-->
-                <div class="modal-content">
-
-                    <div class="modal-header">
-                        <h4 class="modal-title">3D-SECURE EXAMPLE</h4>
-                    </div>
-
-                    <div class="modal-body" id="acceptJSPayBody">
-                        <!--form role="form"-->
-
-                        <div class="form-group col-xs-8">
-                            <label for="creditCardNumber">CREDIT CARD NUMBER</label>
-                            <input type="tel" class="form-control" id="creditCardNumberPA" placeholder="4000000000000002" value="4000000000000002" autocomplete="off"/>
+                    <div class="row" id="echeck_form">
+                        <div class="form-group col-xs-6">
+                            <label for="bankName">Bank Name</label>
+                            <input type="text" class="form-control" id="bankName" placeholder="Bank Name" autocomplete="off"/>
                         </div>
-                        <div class="form-group col-xs-4">
-                            <label for="cvv">CVV</label>
-                            <input type="text" class="form-control" id="cvv" placeholder="123" autocomplete="off"/>
+                        <div class="form-group col-xs-6">
+                            <label for="routingNumber">Bank Routing Number</label>
+                            <input type="text" class="form-control" id="routingNumber" placeholder="Bank Routing Number" value="121141754"/>
                         </div>
-
-                        <div>
-
-                            <div class="form-group col-xs-5">
-                                <label for="expiryDateYY">EXP. DATE</label>
-                                <input type="text" class="form-control" id="expiryDateYYPA" placeholder="YYYY"/>
-                            </div>
-
-                            <div class="form-group col-xs-3">
-                                <label for="expiryDateMM" style="opacity: 0">MONTH</label>
-                                <input type="text" class="form-control" id="expiryDateMMPA" placeholder="MM"/>
-                            </div>
-
-
-                            <div class="form-group col-xs-4">
-                                <label for="amount">AMOUNT</label>
-                                <input type="text" class="form-control" id="amountPA" placeholder="0.5"/>
-                            </div>
-
-
+                        <div class="form-group col-xs-6">
+                            <label for="nameOnAccount">Name of Account Holder</label>
+                            <input type="text" class="form-control" id="nameOnAccount" placeholder="Name of Account Holder" value="John Doe"/>
                         </div>
-
+                        <div class="form-group col-xs-6">
+                            <label for="accountNumber">Account Number</label>
+                            <input type="text" class="form-control" id="accountNumber" placeholder="Account Number" value="7687245428"/>
+                        </div>
+                        <div class="form-group col-xs-6">
+                            <label for="accountType" style="display: block;">Account Type</label>
+                            <label for="male" class="radio-inline"><input type="radio" id="accountType_checking" name="accountType" value="checking" checked>Checking</label>
+                            <label for="female" class="radio-inline"><input type="radio" id="accountType_savings" name="accountType" value="savings">Saving</label>
+                            <label for="other" class="radio-inline"><input type="radio" id="accountType_businessChecking" name="accountType" value="businessChecking">Business Checking</label>
+                            <input type="hidden" id="accountType"/>
+                        </div>
+                        <div class="form-group col-xs-6">
+                            <label for="amount">AMOUNT</label>
+                            <input type="text" class="form-control" id="echeck_amount" placeholder="0.5"/>
+                        </div>
                         <!--/form-->
                         <div style="text-align: center; margin-top: 20%;">
-                            <button type="button" id="submitPAButton" class="btn btn-primary" style="width: 95%;">SUBMIT</button>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
-        <div id="addPayDiv" style="margin-left:5%">
-            <br><p><button type="button" id="addPaymentButton" class="btn btn-primary btn-lg" style="margin: 5px">Add New Payment</button></p><br>
-        </div>
-
-        <div id="addShipDiv" style="margin-left:5%">
-            <br><p><button type="button" id="addShippingButton" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal" style="margin: 5px">Add New Address</button></p><br>
-        </div>
-
-        <div class="tab-content panel-group">
-
-            <div class="tab-pane" id="pay"></div>
-
-            <div class="panel panel-info tab-pane center-block" id="samplePayDiv" style="width:90%">
-                <div class="panel-heading">
-                    <h3 class="panel-title text-center"><b>Additional Payment Examples</b></h3>
-                </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div id="acceptJSPayDiv" style="text-align:center">
-                            <button type="button" id="acceptJSPayButton" class="btn btn-primary btn-lg col-md-4 col-sm-offset-4" style="font-weight: bolder; font-size: 24px; margin-top: 10px; margin-bottom: 10px" data-toggle="modal" data-target="#acceptJSPayModal">Pay (Accept.js)</button>
+                            <button type="button" id="submitEcheckButton" class="btn btn-primary" style="width: 95%;">SUBMIT</button>
                         </div>
                     </div>
+                    <input type="hidden" id="customer_id" value="${it.customer_id}"/>
+                    <input type="hidden" id="quickbook_customer_id" value="${it.quickbook_customer_id}"/>
+                    <input type="hidden" id="order_id" value="${it.order_id}"/>
+                    <input type="hidden" id="clientKey" value="${it.clientKey}"/>
+                    <input type="hidden" id="apiLoginID" value="${it.apiLoginID}"/>
                 </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                        <h4 class="modal-title" id="myModalLabel" style="font-weight: bold">Edit </h4>
-                    </div>
-                    <div class="modal-body">
-                        <iframe id="add_shipping" class="embed-responsive-item" name="add_shipping" width="100%"  frameborder="0" scrolling="no" hidden="true" ></iframe>
-                        <iframe id="edit_shipping" class="embed-responsive-item" name="edit_shipping" width="100%"  frameborder="0" scrolling="no" hidden="true"></iframe> 
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="HPConfirmation" role="dialog">
-            <div class="modal-dialog" style="display: inline-block; vertical-align: middle;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button id="closeAcceptConfirmationHeaderBtn" type="button" class="close" data-dismiss="modal">&times;</button>
-                        <h4 class="modal-title"><b>Payment Confirmation</b></h4>
-                    </div>
-                    <div class="modal-body" style="background-color: antiquewhite">
-                        <p style="font-size: 16px; font-style: italic; padding:10px; color: #444; text-align: center"></p>
-                    </div>
-                    <div class="modal-footer">
-                        <button id="closeAcceptConfirmationFooterBtn" type="button" class="btn btn-success" data-dismiss="modal">Close</button>
-                    </div>
-                </div> 
             </div>
         </div>
 
     </body>
 
     <script>
-        $('#acceptJSPayButton').click(function (e) {
-            e.preventDefault();
-        });
-        $('#payerAuthPayButton').click(function (e) {
-            e.preventDefault();
-        });
         $('#submitButton').click(function (e) {
             e.preventDefault();
-            acceptJSCaller();
+            acceptJSCaller($('input[name="paymentMethod"]:checked').val());
         });
-        $('#submitPAButton').click(function (e) {
+        $('#submitEcheckButton').click(function (e) {
             e.preventDefault();
-            payerAuthCaller();
+            acceptJSCaller($('input[name="paymentMethod"]:checked').val());
+        });
+        $(document).ready(function () {
+            $('ul.nav li a').click();
+            $('#echeck_form').hide();
+            $('input[name="paymentMethod"]').bind('change', function () {
+                var creditcard_showOrHide = ($(this).val() === 'creditcard') ? true : false;
+                var echeck_showOrHide = ($(this).val() === 'echeck') ? true : false;
+                $('#creditcard_form').toggle(creditcard_showOrHide);
+                $('#echeck_form').toggle(echeck_showOrHide);
+            });
         });
     </script>
-
 </html>

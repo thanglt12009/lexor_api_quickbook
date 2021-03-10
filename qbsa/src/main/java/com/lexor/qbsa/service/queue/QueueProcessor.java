@@ -17,10 +17,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.HashMap;
@@ -31,7 +29,6 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Inject;
-import javax.net.ssl.HttpsURLConnection;
 import org.jvnet.hk2.annotations.Service;
 
 /**

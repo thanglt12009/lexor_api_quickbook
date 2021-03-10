@@ -1,6 +1,5 @@
 package com.lexor.qbsa.util;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.intuit.oauth2.client.OAuth2PlatformClient;
 import com.intuit.oauth2.config.OAuth2Config;
 import com.intuit.oauth2.config.Scope;
@@ -57,9 +56,9 @@ public class Utility {
     private static boolean checkAuth(String response) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            Map<String, String> map = mapper.readValue(response, Map.class);
+            Map<String, Object> map = mapper.readValue(response, Map.class);
             if (map.containsKey("fault")) {
-                Map<String, String> fault = mapper.readValue(map.get("fault"), Map.class);
+                Map<String, Object> fault = (Map<String, Object>)map.get("fault");
                 if (fault.containsKey("type") && "AUTHENTICATION".equals(fault.get("type"))) {
                     return false;
                 }
@@ -112,12 +111,7 @@ public class Utility {
      * @return Response
      */
     public static Response doGet(String params) {
-        if (lastRefresh.compareTo(LocalDateTime.now().minusMinutes(60)) < 0)
-            try {
-            renew();
-        } catch (URISyntaxException | OAuthException e) {
-            e.printStackTrace();
-        }
+        doRenew();
         BufferedReader reader;
         String response = "";
         boolean refresh = false;
@@ -173,6 +167,18 @@ public class Utility {
         return Response.ok(response).build();
     }
 
+    public static boolean doRenew() {
+        if (lastRefresh.compareTo(LocalDateTime.now().minusMinutes(60)) < 0) {
+            try {
+                renew();
+            } catch (URISyntaxException | OAuthException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Method to send POST request to Quickbooks 1. Set up connection 2. send to
      * Quickbooks 3. Return Quickbooks response back to the originator
@@ -183,12 +189,7 @@ public class Utility {
      */
     public static Response doPost(String apiEndpoint, String postData) {
 
-        if (lastRefresh.compareTo(LocalDateTime.now().minusMinutes(60)) < 0)
-            try {
-            renew();
-        } catch (URISyntaxException | OAuthException e) {
-            e.printStackTrace();
-        }
+        doRenew();
 
         String response = "";
         BufferedReader in;
@@ -261,7 +262,7 @@ public class Utility {
      * @return Response
      * @throws java.net.URISyntaxException
      */
-    public static Response auth(HttpSession session) throws URISyntaxException {
+    public static Response auth(HttpSession session, String target) throws URISyntaxException {
 
         //Prepare the config
         OAuth2Config oauth2Config = OAuth2PlatformClientFactory.oauth2Config;
@@ -270,6 +271,7 @@ public class Utility {
         String csrf = oauth2Config.generateCSRFToken();
 
         session.setAttribute("csrfToken", csrf);
+        session.setAttribute("target", target);
 
         //Prepare scopes
         List<Scope> scopes = new ArrayList<>();

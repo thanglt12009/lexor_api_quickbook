@@ -5,6 +5,7 @@ import com.intuit.oauth2.exception.OAuthException;
 import com.lexor.qbsa.domain.Configurations;
 import com.lexor.qbsa.repository.ConfigurationsRepository;
 import com.lexor.qbsa.service.qbo.OAuth2PlatformClientFactory;
+import com.lexor.qbsa.util.ErpUtility;
 import com.lexor.qbsa.util.Utility;
 
 import java.net.URISyntaxException;
@@ -40,6 +41,7 @@ public class DataLoader implements ApplicationEventListener {
 
                 // Load CompanyConfig table with realmIds and access tokens
                 Utility.init();
+                ErpUtility.init();
                 loadConfig();
                 break;
             default:
