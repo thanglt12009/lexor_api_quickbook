@@ -90,10 +90,12 @@ function createTransact(dataObj) {
 // If the data looks correct, record the OpaqueData to the console and call the transaction processing function.
 function  responseHandler(response) {
     if (response.messages.resultCode === 'Error') {
+        err_msg = '';
         for (var i = 0; i < response.messages.message.length; i++) {
             console.log(response.messages.message[i].code + ':' + response.messages.message[i].text);
+            err_msg += response.messages.message[i].text;
         }
-        alert("acceptJS library error!")
+        alert("acceptJS library error!" + err_msg);
     } else {
         console.log(response.opaqueData.dataDescriptor);
         console.log(response.opaqueData.dataValue);

@@ -43,7 +43,7 @@ public class CallbackController {
         String state = request.getParameter("state");
         String realmId = request.getParameter("realmId");
         String authCode = request.getParameter("code");
-        if (csrfToken.equals(state)) {
+        if (csrfToken != null && csrfToken.equals(state)) {
             session.setAttribute("realmId", realmId);
             session.setAttribute("auth_code", authCode);
             Utility.getToken(authCode, session);
