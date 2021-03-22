@@ -127,21 +127,11 @@
         <script src="/qbsa/static/js/authorizenet/scripts/bootstrap.min.js"></script>
         <script src="/qbsa/static/js/authorizenet/scripts/jquery.cookie.js"></script>
 
-        <!--<script src="https://sandbox-assets.secure.checkout.visa.com/checkout-widget/resources/js/integration/v1/sdk.js"></script>-->
-        <script src="https://includestest.ccdc02.com/cardinalcruise/v1/songbird.js"></script>
-        <script src="https://jstest.authorize.net/v1/Accept.js"></script>
-        <script src="https://jstest.authorize.net/v3/acceptUI.js"></script>
-        <script src="/qbsa/static/js/authorizenet/acceptJSCaller.js"></script>
-        <!--        <script th:src="@{/static/js/authorizenet/applePayCaller.js}"></script>-->
-        <!--<script th:src="/qbsa/static/js/authorizenet/chargeProfile.js"></script>-->
-        <!--<script th:src="/qbsa/static/js/authorizenet/payerAuthCaller.js"></script>-->
-        <!--<script th:src="/qbsa/static/js/authorizenet/visaCheckoutTransaction.js"></script>-->
-
         <script type="text/javascript">
 
-            var baseUrl = "https://test.authorize.net/customer/";
+            var baseUrl = "${it.apiurl}/customer/";
             var onLoad = true;
-            tab = null;
+            tab = "#pay";
 
             function returnLoaded() {
                 console.log("Return Page Called ! ");
@@ -187,15 +177,15 @@
                 }
 
                 switch (params['action']) {
-                    case "resizeWindow" 	:
-                        if (parentFrame == "manage" && parseInt(params['height']) < 1150)
-                            params['height'] = 1150;
-                        if (parentFrame == "payment" && parseInt(params['height']) < 1000)
-                            params['height'] = 1000;
-                        if (parentFrame == "addShipping" && $(window).width() > 1021)
-                            params['height'] = 350;
-                        $frame.outerHeight(parseInt(params['height']));
-                        break;
+//                    case "resizeWindow" 	:
+//                        if (parentFrame == "manage" && parseInt(params['height']) < 1150)
+//                            params['height'] = 1150;
+//                        if (parentFrame == "payment" && parseInt(params['height']) < 1000)
+//                            params['height'] = 1000;
+//                        if (parentFrame == "addShipping" && $(window).width() > 1021)
+//                            params['height'] = 350;
+//                        $frame.outerHeight(parseInt(params['height']));
+//                        break;
 
                     case "successfulSave" 	:
                         $('#myModal').modal('hide');
@@ -231,211 +221,89 @@
                                 $("#addShipDiv").show();
                                 break;
                             case "payment"		:
-                                sessionStorage.removeItem("HPTokenTime");
-                                $('#HostedPayment').attr('src', 'about:blank');
+//                                sessionStorage.removeItem("HPTokenTime");
+//                                $('#HostedPayment').attr('src', 'about:blank');
                                 break;
                         }
                         break;
 
                     case "transactResponse"	:
-                        sessionStorage.removeItem("HPTokenTime");
-                        $('#HostedPayment').attr('src', 'about:blank');
+//                        $('#HostedPayment').attr('src', 'about:blank');
                         var transResponse = JSON.parse(params['response']);
-                        $("#HPConfirmation p").html("<strong><b> Success.. !! </b></strong> <br><br> Your payment of <b>$" + transResponse.totalAmount + "</b> for <b>" + transResponse.orderDescription + "</b> has been Processed Successfully on <b>" + transResponse.dateTime + "</b>.<br><br>Generated Order Invoice Number is :  <b>" + transResponse.orderInvoiceNumber + "</b><br><br> Happy Shopping with us ..");
-                        $("#HPConfirmation p b").css({"font-size": "22px", "color": "green"});
-                        $("#HPConfirmation").modal("toggle");
+                        console.log(transResponse);
+                        sendTransactResponse(transResponse);
                 }
+            }
+
+            function showTransactionMessage(msg)
+            {
+                try {
+                    responseObj = JSON.parse(msg);
+                    message = "Transaction Successful!<br>Transaction ID: " + responseObj.TransId;
+                } catch (error) {
+                    console.log("Couldn't parse result string");
+                    console.log(error);
+                    message = "Error.";
+                }
+                $('#acceptJSReceiptBody').html(message);
+                $('#acceptJSReceiptModal').modal('show');
+            }
+
+            function sendTransactResponse(dataObj) {
+
+                // Set Amount for demo purposes if not set by callers form
+                customer_id = document.getElementById('customer_id').value;
+                quickbook_customer_id = document.getElementById('quickbook_customer_id').value;
+                order_id = document.getElementById('order_id').value;
+                console.log('Amount = ' + dataObj.totalAmount);
+
+                $.ajax({
+                    url: "/qbsa/api/paymentonline/transactionResponse",
+                    data: {
+                        amount: dataObj.totalAmount,
+                        transId: dataObj.transId,
+                        authorization: dataObj.authorization,
+                        customer_id: customer_id,
+                        quickbook_customer_id: quickbook_customer_id,
+                        order_id: order_id
+                    },
+                    method: 'POST',
+                    timeout: 50000
+
+                }).done(function (data) {
+
+                    console.log('Success');
+
+                }).fail(function () {
+
+                    console.log('Error');
+
+                }).always(function (textStatus) {
+
+                    console.log(textStatus);
+                    showTransactionMessage(textStatus);
+
+                })
+
             }
 
             function showTab(target) {
                 console.log(target);
-                //onLoad = true;
-                var currTime = sessionStorage.getItem("lastTokenTime");
-                if (currTime === null || (Date.now() - currTime) / 60000 > 15) {
-                    location.reload(true);
-                    onLoad = true;
-                }
-                if (onLoad) {
-                    onLoad = false;
-                }
-
-                $("#iframe_holder iframe").hide();
-                $("#payment").hide();
-                $("#shipping").hide();
-                $("#home").hide();
-                $("#digital").hide();
-                $("#digitalPayDiv").hide();
-                $("#samplePayDiv").hide();
-                $("#addPayDiv").hide();
-                $("#addShipDiv").hide();
+                onLoad = false;
 
                 switch (target) {
-                    case "#home" 		:
-                        $("#home").show();
-                        break;
                     case "#pay" 		:
-                        $("#pay").show();
-                        $("#digitalPayDiv").show();
-                        $("#samplePayDiv").show();
+                        $("#paymentPanel").show();
                         $("#load_payment").show();
                         break;
-                    case "#profile" 	:
-                        $("#load_profile").show();
-                        break;
-                    case "#payment" 	:
-                        $("#payment").show();
-                        $("#addPayDiv").show();
-                        break;
-                    case "#shipping" 	:
-                        $("#shipping").show();
-                        $("#addShipDiv").show();
-                        break;
                 }
-            }
-
-            function refreshAcceptHosted()
-            {
-                var currHPTime = sessionStorage.getItem("HPTokenTime");
-                if (currHPTime === null || (Date.now() - currHPTime) / 60000 > 5) {
-                    sessionStorage.setItem("HPTokenTime", Date.now());
-                    $("#getHPToken").load("getHostedPaymentForm.php");
-                    $("#HostedPayment").css({"height": "200px", "background": "url(images/loader.gif) center center no-repeat"});
-                    $("#send_hptoken").submit();
-                }
-                sessionStorage.removeItem("HPTokenTime");
             }
 
             $(function () {
-
-                $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
-                    tab = $(e.target).attr("href") // activated tab
-                    sessionStorage.setItem("tab", tab);
-                    showTab(tab);
-                });
-                onLoad = true;
-                sessionStorage.setItem("lastTokenTime", Date.now());
-                tab = sessionStorage.getItem("tab");
-                if (tab === null) {
-                    $("[href='#home']").parent().addClass("active");
-                    tab = "#home";
-                } else {
-                    $("[href='" + tab + "']").parent().addClass("active");
-                }
                 console.log("Tab : " + tab);
                 showTab(tab);
 
-
-
-                $(".editPay").click(function (e) {
-                    $ppid = $(this).attr("value");
-                    $("#send_token [name=paymentProfileId]").attr("value", $ppid);
-                    $("#add_payment").hide();
-                    $("#edit_payment").show();
-                    $("#edit_payment").css({"height": "300px", "background": "url(images/loader.gif) center center no-repeat"});
-                    $("#send_token").attr({"action": baseUrl + "editPayment", "target": "edit_payment"}).submit();
-                    $("#send_token [name=paymentProfileId]").attr("value", "");
-                    $(window).scrollTop($("#edit_payment").offset().top - 30);
-                });
-
-                $("#addPaymentButton").click(function () {
-                    $("#edit_payment").hide();
-                    $("#add_payment").show();
-                    $(window).scrollTop($('#add_payment').offset().top - 50);
-                });
-
-                $(".editShip").click(function () {
-                    $shid = $(this).attr("value");
-                    $("#send_token [name=shippingAddressId]").attr("value", $shid);
-                    $("#add_shipping").hide();
-                    $("#edit_shipping").css({"height": "300px", "background": "url(images/loader.gif) center center no-repeat"});
-                    $("#send_token").attr({"action": baseUrl + "editShipping", "target": "edit_shipping"}).submit();
-                    $("#edit_shipping").show();
-                    $("#send_token [name=shippingAddressId]").attr("value", "");
-                    $("#myModalLabel").text("Edit Details");
-                    $(window).scrollTop($("#edit_shipping").offset().top - 30);
-                });
-
-                $("#addShippingButton").click(function () {
-                    $("#myModalLabel").text("Add Details");
-                    $("#edit_shipping").hide();
-                    $("#add_shipping").show();
-                    $(window).scrollTop($("#add_shipping").offset().top - 30);
-                });
-
-
-                vph = $(window).height();
-                $("#home").css("margin-top", (vph / 4) + 'px');
-
-                $(window).resize(function () {
-                    $('#home').css({'margin-top': (($(window).height()) / 4) + 'px'});
-                });
-
-                $(window).keydown(function (event) {
-                    if (event.ctrlKey && event.keyCode == 69) {
-                        event.preventDefault();
-                        logOut();
-                    }
-                });
-
             });
-
-            function logOut() {
-                console.log("Log Out event Triggered ..!");
-                $.removeCookie('cpid', {path: '/'});
-                $.removeCookie('temp_cpid', {path: '/'});
-                window.location.href = 'login.php';
-            }
-
-            function onVisaCheckoutReady() {
-                V.init({
-                    apikey: "7L4TQZKPHLJHK4IDAC2S13kDxvj2ltzjzBO1YUl1bBhD0vNqA",
-                    paymentRequest: {
-                        currencyCode: "USD",
-                        total: "16"
-                    },
-                    settings: {
-                        locale: "en_US",
-                        countryCode: "US",
-                        displayName: "Accept Sample Site",
-                        logoUrl: "www.Some_Image_URL.gif",
-                        websiteUrl: "www....Corp.com",
-                        customerSupportUrl: "www....Corp.support.com",
-                        shipping: {
-                            acceptedRegions: ["US", "CA"],
-                            collectShipping: "true"
-                        },
-                        payment: {
-                            cardBrands: [
-                                "VISA",
-                                "MASTERCARD"],
-                            acceptCanadianVisaDebit: "true"
-                        },
-                        review: {
-                            message: "Merchant defined message",
-                            buttonAction: "Continue"
-                        },
-                        dataLevel: "FULL"
-                    }
-                }
-                );
-                V.on("payment.success", function (payment) {
-                    console.log("It worked - we will now make the payment with this secure Visa Checkout Blob");
-                    console.log(JSON.stringify(payment));
-                    createVCOTransaction(payment);
-                });
-
-                V.on("payment.cancel", function (payment) {
-                    alert(JSON.stringify(payment));
-                    console.log("Someone cancelled!");
-                    console.log(JSON.stringify(payment));
-                });
-
-                V.on("payment.error", function (payment, error) {
-                    alert(JSON.stringify(error));
-                    console.log("Ooops!");
-                    console.log(JSON.stringify(payment));
-                });
-            }
         </script>
 
     </head>
@@ -443,6 +311,14 @@
     <body>
 
         <input type='hidden' id='cardinalRequestJwt' value='123456'>
+        <button class="AcceptUI hidden btn btn-primary btn-lg col-md-3 col-sm-offset-1 col-sm-4 col-xs-offset-2 col-xs-8"
+                style="font-weight: bolder; font-size: 24px; margin-top: 10px; margin-bottom: 10px"
+                type="button" id="acceptUIPayButton"
+                data-billingaddressoptions="{&quot;show&quot;:true, &quot;required&quot;:true}"
+                data-apiloginid="${it.apiLoginID}"
+                data-clientkey="${it.clientKey}"
+                data-acceptuiformbtntxt="Subscribe"
+                data-acceptuiformheadertxt="Payment Information" data-responsehandler="responseHandler">Pay (Accept UI)</button>
 
         <div class="container-fluid" style="width: 100%; margin: 0; padding:0">
 
@@ -470,100 +346,28 @@
 
         <div class="tab-content panel-group">
 
-            <div class="tab-pane" id="pay"></div>
-
-            <div class="panel panel-info tab-pane center-block" id="samplePayDiv" style="width:50%">
+            <div class="panel panel-info tab-pane center-block" id="paymentPanel" style="width:50%">
                 <div class="panel-heading">
                     <h3 class="panel-title text-center"><b>Lexor payment page</b></h3>
                 </div>
                 <div class="panel-body">
-                    <div class="row" id="payment_methods">
+                    <div class="row" id="request_payment">
                         <div class="form-group col-xs-12">
-                            <label style="display: block;">Payment methods</label>
-                            <label for="credit_card_method" class="radio-inline"><input type="radio" id="credit_card_method" name="paymentMethod" value="creditcard" checked>Credit Card</label>
-                            <label for="echeck_method" class="radio-inline"><input type="radio" id="echeck_method" name="paymentMethod" value="echeck">eCheck</label>
-                        </div>
-                        <button class="AcceptUI  hidden btn btn-primary btn-lg col-md-3 col-sm-offset-1 col-sm-4 col-xs-offset-2 col-xs-8"
-                                style="font-weight: bolder; font-size: 24px; margin-top: 10px; margin-bottom: 10px"
-                                type="button" id="acceptUIPayButton"
-                                data-billingaddressoptions="{&quot;show&quot;:true, &quot;required&quot;:true}"
-                                data-apiloginid="${it.apiLoginID}"
-                                data-clientkey="${it.clientKey}"
-                                data-acceptuiformbtntxt="Subscribe"
-                                data-acceptuiformheadertxt="Payment Information" data-responsehandler="responseHandler">Pay (Accept UI)</button>
-                    </div>
-                    <div class="row" id="creditcard_form">
-                        <div class="form-group col-xs-8">
-                            <label for="creditCardNumber">CREDIT CARD NUMBER</label>
-                            <input type="tel" class="form-control" id="creditCardNumber" placeholder="4111111111111111" value="4111111111111111" autocomplete="off"/>
-                        </div>
-                        <div class="form-group col-xs-4">
-                            <label for="cvv">CVV</label>
-                            <input type="text" class="form-control" id="cvv" placeholder="123" autocomplete="off"/>
-                        </div>
-                        <div class="form-group col-xs-5">
-                            <label for="expiryDateYY">EXP. DATE</label>
-                            <input type="text" class="form-control" id="expiryDateYY" placeholder="YYYY"/>
-                        </div>
-                        <div class="form-group col-xs-3">
-                            <label for="expiryDateMM" style="opacity: 0">MONTH</label>
-                            <input type="text" class="form-control" id="expiryDateMM" placeholder="MM"/>
-                        </div>
-                        <div class="form-group col-xs-4">
                             <label for="amount">AMOUNT</label>
-                            <input type="text" class="form-control" id="amount" placeholder="0.5"/>
-                        </div>
-                        <div class="form-group col-xs-8">
-                            <label for="fullName">Full name</label>
-                            <input type="text" class="form-control" id="fullName" placeholder="Your full name"/>
-                        </div>
-                        <div class="form-group col-xs-4">
-                            <label for="zip" style="opacity: 0">Zip code</label>
-                            <input type="text" class="form-control" id="zip" placeholder="Your zip code"/>
-                        </div>
-                        <!--/form-->
-                        <div style="text-align: center; margin-top: 20%;">
-                            <button type="button" id="submitButton" class="btn btn-primary" style="width: 95%;">SUBMIT</button>
+                            <input type="text" class="form-control" id="amount" placeholder="0.5">
+                            <button type="button" id="btnRequestPayment" class="btn btn-primary" style="margin: 10px;">Request payment</button>
                         </div>
                     </div>
-                    <div class="row" id="echeck_form">
-                        <div class="form-group col-xs-6">
-                            <label for="bankName">Bank Name</label>
-                            <input type="text" class="form-control" id="bankName" placeholder="Bank Name" autocomplete="off"/>
-                        </div>
-                        <div class="form-group col-xs-6">
-                            <label for="routingNumber">Bank Routing Number</label>
-                            <input type="text" class="form-control" id="routingNumber" placeholder="Bank Routing Number" value="121141754"/>
-                        </div>
-                        <div class="form-group col-xs-6">
-                            <label for="nameOnAccount">Name of Account Holder</label>
-                            <input type="text" class="form-control" id="nameOnAccount" placeholder="Name of Account Holder" value="John Doe"/>
-                        </div>
-                        <div class="form-group col-xs-6">
-                            <label for="accountNumber">Account Number</label>
-                            <input type="text" class="form-control" id="accountNumber" placeholder="Account Number" value="7687245428"/>
-                        </div>
-                        <div class="form-group col-xs-6">
-                            <label for="accountType" style="display: block;">Account Type</label>
-                            <label for="male" class="radio-inline"><input type="radio" id="accountType_checking" name="accountType" value="checking" checked>Checking</label>
-                            <label for="female" class="radio-inline"><input type="radio" id="accountType_savings" name="accountType" value="savings">Saving</label>
-                            <label for="other" class="radio-inline"><input type="radio" id="accountType_businessChecking" name="accountType" value="businessChecking">Business Checking</label>
-                            <input type="hidden" id="accountType"/>
-                        </div>
-                        <div class="form-group col-xs-6">
-                            <label for="amount">AMOUNT</label>
-                            <input type="text" class="form-control" id="echeck_amount" placeholder="0.5"/>
-                        </div>
-                        <!--/form-->
-                        <div style="text-align: center; margin-top: 20%;">
-                            <button type="button" id="submitEcheckButton" class="btn btn-primary" style="width: 95%;">SUBMIT</button>
-                        </div>
-                    </div>
+                    <iframe id="load_payment" class="embed-responsive-item" name="load_payment" width="100%" height="650px" frameborder="0" scrolling="no" hidden="true">
+                    </iframe>
                     <input type="hidden" id="customer_id" value="${it.customer_id}"/>
                     <input type="hidden" id="quickbook_customer_id" value="${it.quickbook_customer_id}"/>
                     <input type="hidden" id="order_id" value="${it.order_id}"/>
                     <input type="hidden" id="clientKey" value="${it.clientKey}"/>
                     <input type="hidden" id="apiLoginID" value="${it.apiLoginID}"/>
+                    <form id="send_hptoken" action="${it.apiurl}/payment/payment" method="post" target="load_payment" >
+                        <input type="hidden" id="hp_token" name="token" />
+                    </form>
                 </div>
             </div>
         </div>
@@ -571,22 +375,30 @@
     </body>
 
     <script>
-        $('#submitButton').click(function (e) {
+        $('#btnRequestPayment').click(function (e) {
             e.preventDefault();
-            acceptJSCaller($('input[name="paymentMethod"]:checked').val());
-        });
-        $('#submitEcheckButton').click(function (e) {
-            e.preventDefault();
-            acceptJSCaller($('input[name="paymentMethod"]:checked').val());
+            $.ajax({
+                url: "/qbsa/api/paymentonline/requestPayment",
+                data: {
+                    amount: document.getElementById('amount').value
+                },
+                method: 'POST',
+                timeout: 50000
+
+            }).done(function (data) {
+
+                responseObj = JSON.parse(data);
+                document.getElementById('hp_token').value = responseObj.hp_token;
+                setTimeout(function () {
+                    $("#send_hptoken").submit();
+                }, 100);
+
+            });
         });
         $(document).ready(function () {
             $('ul.nav li a').click();
-            $('#echeck_form').hide();
-            $('input[name="paymentMethod"]').bind('change', function () {
-                var creditcard_showOrHide = ($(this).val() === 'creditcard') ? true : false;
-                var echeck_showOrHide = ($(this).val() === 'echeck') ? true : false;
-                $('#creditcard_form').toggle(creditcard_showOrHide);
-                $('#echeck_form').toggle(echeck_showOrHide);
+            $("#acceptJSReceiptModal").on('hide.bs.modal', function () {
+                location.reload();
             });
         });
     </script>

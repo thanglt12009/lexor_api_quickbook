@@ -13,12 +13,18 @@ public class AuthorizeNetConfigService {
     private static final String CLIENT_KEY = "payment.authorizenet.clientkey";
     private static final String SAND_BOX = "payment.authorizenet.sandbox";
     private static final String RETURN_URL = "payment.authorizenet.returnurl";
+    private static final String JS_URL = "payment.authorizenet.jsurl";
+    private static final String API_URL = "payment.authorizenet.apiurl";
+    private static final String COMMUNICATE_URL = "payment.authorizenet.communicateurl";
 
     private String apiLoginId = null;
     private String transactionKey = null;
     private String clientKey = null;
     private Environment environment = Environment.SANDBOX;
     private String returnUrl = null;
+    private String jsUrl = null;
+    private String apiUrl = null;
+    private String communicateUrl = null;
 
 
     @PostConstruct
@@ -27,6 +33,9 @@ public class AuthorizeNetConfigService {
         this.transactionKey = ConfigHelper.properties.getProperty(TRANSACTION_KEY);
         this.clientKey = ConfigHelper.properties.getProperty(CLIENT_KEY);
         this.returnUrl = ConfigHelper.properties.getProperty(RETURN_URL);
+        this.jsUrl = ConfigHelper.properties.getProperty(JS_URL);
+        this.apiUrl = ConfigHelper.properties.getProperty(API_URL);
+        this.communicateUrl = ConfigHelper.properties.getProperty(COMMUNICATE_URL);
         this.environment = Environment.SANDBOX;
         if ("True".equals(ConfigHelper.properties.getProperty(SAND_BOX))) {
             this.environment = Environment.SANDBOX;
@@ -54,6 +63,18 @@ public class AuthorizeNetConfigService {
     
     public String getReturnUrl() {
     	return this.returnUrl;
+    }
+    
+    public String getJsUrl() {
+    	return this.jsUrl;
+    }
+    
+    public String getApiUrl() {
+    	return this.apiUrl;
+    }
+    
+    public String getCommunicateUrl() {
+    	return this.communicateUrl;
     }
 
     public Environment getEnvironment() {
