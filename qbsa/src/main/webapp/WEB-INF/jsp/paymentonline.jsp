@@ -126,6 +126,8 @@
         <script src="/qbsa/static/js/authorizenet/scripts/jquery-2.1.4.min.js"></script>
         <script src="/qbsa/static/js/authorizenet/scripts/bootstrap.min.js"></script>
         <script src="/qbsa/static/js/authorizenet/scripts/jquery.cookie.js"></script>
+        
+        <script src="https://api.paysimple.com/paysimplejs/v1/scripts/client.js"></script>
 
         <script type="text/javascript">
 
@@ -321,7 +323,6 @@
                 data-acceptuiformheadertxt="Payment Information" data-responsehandler="responseHandler">Pay (Accept UI)</button>
 
         <div class="container-fluid" style="width: 100%; margin: 0; padding:0">
-
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container-fluid navbar-centered">
                     <ul class="nav navbar-nav" style="margin-top: 0px; margin-bottom:0px; margin-left:auto">
@@ -330,7 +331,6 @@
                 </div>
             </div>
             <br/>
-
             <div id="acceptJSReceiptModal" class="modal fade" role="dialog">
                 <div class="modal-dialog" style="display: inline-block; vertical-align: middle;">
                     <div class="modal-content">
@@ -352,22 +352,62 @@
                 </div>
                 <div class="panel-body">
                     <div class="row" id="request_payment">
+                        <div class="form-group col-xs-6">
+                            <input type="radio" id="authorize_gate" name="payment_gate" value="authorize" checked="checked">
+                            <label for="authorize_gate">Authorize.Net</label><br>
+                        </div>
+                        <div class="form-group col-xs-6">
+                            <input type="radio" id="paysimple_gate" name="payment_gate" value="paysimple">
+                            <label for="paysimple_gate">Pay Simple</label>
+                        </div>
+                    </div>
+                    <div class="row authorize" id="request_payment">
                         <div class="form-group col-xs-12">
                             <label for="amount">AMOUNT</label>
                             <input type="text" class="form-control" id="amount" placeholder="0.5">
                             <button type="button" id="btnRequestPayment" class="btn btn-primary" style="margin: 10px;">Request payment</button>
                         </div>
                     </div>
-                    <iframe id="load_payment" class="embed-responsive-item" name="load_payment" width="100%" height="650px" frameborder="0" scrolling="no" hidden="true">
+                    <iframe id="load_payment" class="authorize embed-responsive-item" name="load_payment" width="100%" height="650px" frameborder="0" scrolling="no" hidden="true">
                     </iframe>
                     <input type="hidden" id="customer_id" value="${it.customer_id}"/>
                     <input type="hidden" id="quickbook_customer_id" value="${it.quickbook_customer_id}"/>
                     <input type="hidden" id="order_id" value="${it.order_id}"/>
                     <input type="hidden" id="clientKey" value="${it.clientKey}"/>
                     <input type="hidden" id="apiLoginID" value="${it.apiLoginID}"/>
-                    <form id="send_hptoken" action="${it.apiurl}/payment/payment" method="post" target="load_payment" >
+                    <form class="authorize" id="send_hptoken" action="${it.apiurl}/payment/payment" method="post" target="load_payment" >
                         <input type="hidden" id="hp_token" name="token" />
                     </form>
+                    <div class="row paysimple">
+                        <div class="form-group col-xs-12">
+                            <form id="paysimple-form">
+                                <div class="merchant-form hidden">
+                                    <div class="form-field">
+                                        <label for="firstName">First Name</label>
+                                        <input type="text" id="firstName" />
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="lastName">Last Name</label>
+                                        <input type="text" id="lastName" />
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="email">Email</label>
+                                        <input type="email" id="email" />
+                                    </div>
+                                </div>
+
+                                <div class="psjs">
+                                    <div id="psjs">
+                                        <!-- a PaySimpleJS Payment Form will be inserted here -->
+                                    </div>
+                                </div>
+
+                                <div class="merchant-form">
+                                    <button type="submit" id="submit">Complete Checkout</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -375,12 +415,106 @@
     </body>
 
     <script>
+        function loadPaysimpleJs(responseObj) {
+            auth = responseObj.hp_token;
+            auth = {
+                        token: responseObj.hp_token
+                   };
+            firstName = responseObj.firstName;
+            lastName = responseObj.lastName;
+            cellPhone = responseObj.cellPhone;
+            busPhone = responseObj.busPhone;
+            email = responseObj.email;
+            document.getElementById('firstName').value = firstName;
+            document.getElementById('lastName').value = lastName;
+            document.getElementById('email').value = email;
+
+            var paysimplejs = window.paysimpleJs({
+                // the element that will contain the iframe
+                container: document.querySelector('#psjs'),
+                // checkout_token is in auth
+                auth: auth,
+                isLoggedIn: 0,
+                autoRefresh: null,
+                // allows entry of international postal codes if true
+                bypassPostalCodeValidation: false,
+                // Attempts to prevent browsers from using autocompletion to pre-populate 
+                // or suggest input previously stored by the user. Turn on for point of 
+                // sale or kiosk type applications where many different customers 
+                // will be using the same browser to enter payment information.
+                preventAutocomplete : false,
+                // customized styles are optional
+                styles: {
+                  body: {
+                    // set the background color of the payment page
+                    backgroundColor: '#f9f9f9'
+                  }
+                }
+            });
+            paysimplejs.send.setMode('cc-key-enter');
+//            paysimplejs.send.setMode('ach-key-enter');
+            paysimplejs.on('httpError', function(error) {
+                // where error = {
+                // "errorKey": <"timeout" | "bad_request" | "server_error"
+                // | "unauthorized" | "unknown">,
+                // "errors": <array of { field: <string>, message: <string> }>,
+                // "status": <number - http status code returned>
+                // }
+                // Add your error handling
+                alert(error.errors[0].message);
+            });
+            paysimplejs.on('accountRetrieved', function(accountInfo) {
+                /* Example accountInfo:
+                              * {
+                              *    "account": {
+                              *        "id": 7313702
+                              *    },
+                              *    "customer": {
+                              *        "id": 8041997,
+                              *        "firstName": "John",
+                              *        "lastName": "Snow",
+                              *        "email": "john@snow.com"
+                              *    },
+                              *    "paymentToken": "e1f1bb19-9fe4-4c96-a35e-cd921298d8e6"
+                              * }
+                              */
+
+                // Send the accountInfo to your server to collect a payment
+                // for an existing customer
+                var xhr = new XMLHttpRequest();
+                // Replace with url of your endpoint
+                xhr.open('POST', '/qbsa/api/paymentonline/completePayment');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload = function (e) {
+                    if (xhr.status < 300) {
+                        var data = JSON.parse(this.response);
+                        message = "Transaction Successful!<br>Transaction ID: " + data.TraceNumber;
+                    } else {
+                        message = "Transaction Unsuccessful." + xhr.responseText;
+                    }
+                    $('#acceptJSReceiptBody').html(message);
+                    $('#acceptJSReceiptModal').modal('show');
+                };
+                accountInfo.amount = document.querySelector('#amount').value;
+                xhr.send(JSON.stringify(accountInfo));
+            });
+        };
+
         $('#btnRequestPayment').click(function (e) {
             e.preventDefault();
+            payment_gate = '';
+            if (document.getElementById('authorize_gate').checked) {
+                payment_gate = document.getElementById('authorize_gate').value;
+            }
+            if (document.getElementById('paysimple_gate').checked) {
+                payment_gate = document.getElementById('paysimple_gate').value;
+            }
             $.ajax({
                 url: "/qbsa/api/paymentonline/requestPayment",
                 data: {
-                    amount: document.getElementById('amount').value
+                    amount: document.getElementById('amount').value,
+                    paymentgate: payment_gate,
+                    customer_id: document.getElementById('customer_id').value
                 },
                 method: 'POST',
                 timeout: 50000
@@ -388,10 +522,15 @@
             }).done(function (data) {
 
                 responseObj = JSON.parse(data);
-                document.getElementById('hp_token').value = responseObj.hp_token;
-                setTimeout(function () {
-                    $("#send_hptoken").submit();
-                }, 100);
+                if (document.getElementById('authorize_gate').checked) {
+                    document.getElementById('hp_token').value = responseObj.hp_token;
+                    setTimeout(function () {
+                        $("#send_hptoken").submit();
+                    }, 100);
+                }
+                if (document.getElementById('paysimple_gate').checked) {
+                    loadPaysimpleJs(responseObj);
+                }
 
             });
         });

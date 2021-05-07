@@ -8,6 +8,8 @@ import com.lexor.qbsa.service.CompanyConfigServiceImpl;
 import com.lexor.qbsa.service.payment.authorizenet.AuthorizeNetConfigService;
 import com.lexor.qbsa.service.payment.authorizenet.CreateAnAcceptPaymentTransaction;
 import com.lexor.qbsa.service.payment.authorizenet.GetAnAcceptPaymentToken;
+import com.lexor.qbsa.service.payment.paysimple.GetCheckoutToken;
+import com.lexor.qbsa.service.payment.paysimple.PaySimpleConfigService;
 import com.lexor.qbsa.service.qbo.CDCService;
 import com.lexor.qbsa.service.qbo.OAuth2PlatformClientFactory;
 import com.lexor.qbsa.service.qbo.QBODataService;
@@ -41,6 +43,8 @@ public class ApplicationBinder extends AbstractBinder {
         bindAsContract(AuthorizeNetConfigService.class);
         bindAsContract(CreateAnAcceptPaymentTransaction.class);
         bindAsContract(GetAnAcceptPaymentToken.class);
+        bindAsContract(GetCheckoutToken.class);
+        bindAsContract(PaySimpleConfigService.class);
 
         bind(CompanyConfigServiceImpl.class).to(CompanyConfigService.class);
         bind(QueryService.class).to(QBODataService.class).qualifiedBy(new QueryAPIQualifier());

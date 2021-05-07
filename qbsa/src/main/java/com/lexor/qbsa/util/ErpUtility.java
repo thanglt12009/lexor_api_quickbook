@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -129,18 +130,35 @@ public class ErpUtility {
         return json;
     }
     
-    public static Response doNotifyCompleteCustomerQB(String customerId, String qbCustomerId) {
+    public static Response doNotifyCompleteCustomerQB(String customerId, String qbCustomerId, String orderId) {
         BufferedReader reader;
         String response = "";
         HttpsURLConnection connection = null;
         try {
-            URL url = new URL(apiHost + "/lxerp/api/qbservice/handlecustomercompleted/" + customerId + "/" + qbCustomerId);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("idCustomerERP", customerId);
+            payload.put("idCustomerQBO", qbCustomerId);
+            payload.put("idOrderERP", orderId);
+            String data = "";
+            try {
+                data = new ObjectMapper().writeValueAsString(payload);
+            } catch (Exception ex) {
+                LOG.log(Level.SEVERE, "{0}", ex);
+            }
+//            URL url = new URL(apiHost + "/lxerp/api/qbservice/updateIdCustomerQBOToERP?idCustomerERP=" + customerId + "&idCustomerQBO=" + qbCustomerId + "&idOrderERP=" + orderId);
+            URL url = new URL(apiHost + "/lxerp/api/qbservice/updateIdCustomerQBOToERP");
             connection = (HttpsURLConnection) url.openConnection();
             connection.setRequestProperty("x-access-token", accessToken);
             connection.setDoOutput(true);
             connection.setDoInput(true);
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod("POST");
             connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/json;");
+            try (OutputStreamWriter osw = new OutputStreamWriter(connection.getOutputStream())) {
+                osw.write(String.format(data));
+                osw.flush();
+                osw.close();
+            }
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             } else {
@@ -167,18 +185,36 @@ public class ErpUtility {
         return Response.ok(response).build();
     }
 
-    public static Response doNotifyCompletePaymentQB(String paymentId) {
+    public static Response doNotifyCompletePaymentQB(String paymentId, String transId, String orderId, Double amount) {
         BufferedReader reader;
         String response = "";
         HttpsURLConnection connection = null;
         try {
-            URL url = new URL(apiHost + "/lxerp/api/qbservice/handlepaymentcompleted/" + paymentId);
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("idTrans", transId);
+            payload.put("idOrder", orderId);
+            payload.put("amount", String.format("%.2f", amount));
+            payload.put("idPaymentQBO", paymentId);
+            String data = "";
+            try {
+                data = new ObjectMapper().writeValueAsString(payload);
+            } catch (Exception ex) {
+                LOG.log(Level.SEVERE, "{0}", ex);
+            }
+
+            URL url = new URL(apiHost + "/lxerp/api/reactorder/quotes-orderSaleCredit");
             connection = (HttpsURLConnection) url.openConnection();
             connection.setRequestProperty("x-access-token", accessToken);
             connection.setDoOutput(true);
             connection.setDoInput(true);
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod("POST");
             connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/json;");
+            try (OutputStreamWriter osw = new OutputStreamWriter(connection.getOutputStream())) {
+                osw.write(String.format(data));
+                osw.flush();
+                osw.close();
+            }
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             } else {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lexor.qbsa.service.payment.authorizenet.AuthorizeNetConfigService;
 import com.lexor.qbsa.service.payment.authorizenet.CreateAnAcceptPaymentTransaction;
 import com.lexor.qbsa.service.payment.authorizenet.GetAnAcceptPaymentToken;
+import com.lexor.qbsa.service.payment.paysimple.GetCheckoutToken;
 import com.lexor.qbsa.service.queue.QueueService;
 import com.lexor.qbsa.util.ErpUtility;
 import com.lexor.qbsa.util.Utility;
@@ -52,6 +53,9 @@ public class PaymentOnlineController extends ApplicationController {
 
     @Inject
     private AuthorizeNetConfigService authorizeConfig;
+    
+    @Inject
+    private GetCheckoutToken checkoutToken;
 
     /**
      * Creates a new instance of HelloResource
@@ -100,17 +104,45 @@ public class PaymentOnlineController extends ApplicationController {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.TEXT_HTML)
     public Response requestPayment(
-            @FormParam("amount") String amount) throws URISyntaxException {
+            @FormParam("amount") String amount,
+            @FormParam("paymentgate") String paymentgate,
+            @FormParam("customer_id") String customer_id) throws URISyntaxException {
 
         Double amt;
+        String hpToken = "";
+        Map<String, String> payload = new HashMap<>();
         try {
             amt = Double.parseDouble(amount);
         } catch(Exception ex) {
             amt = 0.0;
         }
-        String hpToken = acceptHostedToken.run(amt);
-        
-        Map<String, String> payload = new HashMap<>();
+        if ("authorize".equals(paymentgate)) {
+            hpToken = acceptHostedToken.run(amt);
+        }
+        if ("paysimple".equals(paymentgate)) {
+            hpToken = checkoutToken.run();
+            try {
+                Response erpres = ErpUtility.doGetCustomer(customer_id);
+                String cusDataStr = (String) erpres.getEntity();
+                ObjectMapper mapper = new ObjectMapper();
+                Map<String, Object> map = mapper.readValue(cusDataStr, Map.class);
+                if (!map.containsKey("message")) {
+                    Map<String, Object> contactInfo = (Map<String, Object>) map.get("contactInfo");
+                    String firstName = (String) contactInfo.get("firstName");
+                    String lastName = (String) contactInfo.get("lastName");
+                    String cellPhone = (String) contactInfo.get("cellPhone");
+                    String busPhone = (String) contactInfo.get("busPhone");
+                    String email = (String) contactInfo.get("email");
+                    payload.put("firstName", firstName);
+                    payload.put("lastName", lastName);
+                    payload.put("cellPhone", cellPhone);
+                    payload.put("busPhone", busPhone);
+                    payload.put("email", email);
+                }
+            } catch (Exception e) {
+                LOG.log(Level.SEVERE, "{0}", e);
+            }
+        }
         String json = "";
         try {
             payload.put("hp_token", hpToken);
@@ -119,6 +151,31 @@ public class PaymentOnlineController extends ApplicationController {
             LOG.log(Level.SEVERE, "{0}", ex);
         }
         return Response.ok(json).build();
+    }
+    
+    @POST
+    @Path("/completePayment")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.TEXT_HTML)
+    public Response completePayment(@Context HttpServletRequest request) throws URISyntaxException {
+
+        String account = request.getParameter("account");
+        
+        String json = "";
+        Map<String, String> payload = new HashMap<>();
+        try {
+            payload.put("account", account);
+            json = new ObjectMapper().writeValueAsString(payload);
+        } catch (JsonProcessingException ex) {
+            LOG.log(Level.SEVERE, "{0}", ex);
+        }
+//        try {
+//            queueService.add("paysimple", json);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+        return Response.ok(account).build();
     }
 
     @POST
@@ -155,7 +212,7 @@ public class PaymentOnlineController extends ApplicationController {
                             Map<String, Object> customerJson = (Map<String, Object>) map.get("Customer");
                             quickbook_customer_id = (String) customerJson.get("Id");
                             payload.put("QuickBookCustomerId", quickbook_customer_id);
-                            ErpUtility.doNotifyCompleteCustomerQB(customer_id, quickbook_customer_id);
+                            ErpUtility.doNotifyCompleteCustomerQB(customer_id, quickbook_customer_id, order_id);
                         } catch (Exception ex) {
                             LOG.log(Level.SEVERE, "{0}", ex);
                         }
@@ -188,7 +245,7 @@ public class PaymentOnlineController extends ApplicationController {
                 Map<String, Object> paymentJson = (Map<String, Object>) map.get("Payment");
                 String paymentId = (String) paymentJson.get("Id");
                 payload.put("PaymentId", paymentId);
-                ErpUtility.doNotifyCompletePaymentQB(paymentId);
+                ErpUtility.doNotifyCompletePaymentQB(paymentId, payload.get("TransId"), order_id, amt);
             } catch (Exception ex) {
                 LOG.log(Level.SEVERE, "{0}", ex);
             }
@@ -243,7 +300,7 @@ public class PaymentOnlineController extends ApplicationController {
                         Map<String, Object> customerJson = (Map<String, Object>) map.get("Customer");
                         quickbook_customer_id = (String) customerJson.get("Id");
                         payload.put("QuickBookCustomerId", quickbook_customer_id);
-                        ErpUtility.doNotifyCompleteCustomerQB(customer_id, quickbook_customer_id);
+                        ErpUtility.doNotifyCompleteCustomerQB(customer_id, quickbook_customer_id, order_id);
                     } catch (Exception ex) {
                         LOG.log(Level.SEVERE, "{0}", ex);
                     }
@@ -276,7 +333,7 @@ public class PaymentOnlineController extends ApplicationController {
             Map<String, Object> paymentJson = (Map<String, Object>) map.get("Payment");
             String paymentId = (String) paymentJson.get("Id");
             payload.put("PaymentId", paymentId);
-            ErpUtility.doNotifyCompletePaymentQB(paymentId);
+            ErpUtility.doNotifyCompletePaymentQB(paymentId, payload.get("TransId"), order_id, amt);
         } catch (Exception ex) {
             LOG.log(Level.SEVERE, "{0}", ex);
         }
