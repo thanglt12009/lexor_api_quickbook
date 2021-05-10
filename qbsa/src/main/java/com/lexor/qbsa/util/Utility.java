@@ -63,8 +63,9 @@ public class Utility {
                     return false;
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
         return true;
     }

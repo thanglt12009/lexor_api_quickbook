@@ -126,7 +126,7 @@
         <script src="/qbsa/static/js/authorizenet/scripts/jquery-2.1.4.min.js"></script>
         <script src="/qbsa/static/js/authorizenet/scripts/bootstrap.min.js"></script>
         <script src="/qbsa/static/js/authorizenet/scripts/jquery.cookie.js"></script>
-        
+
         <script src="https://api.paysimple.com/paysimplejs/v1/scripts/client.js"></script>
 
         <script type="text/javascript">
@@ -499,42 +499,57 @@
                 xhr.send(JSON.stringify(accountInfo));
             });
         };
+        $(document).ready(function () {
+            $('#paysimple_gate').click(function (e) {
+                if (document.getElementById('paysimple_gate').checked) {
+                    $('#paysimple-form').show();
+                } else {
+                    $('#paysimple-form').hide();
+                }
+            });
+            $('#authorize_gate').click(function (e) {
+                if (document.getElementById('paysimple_gate').checked) {
+                    $('#paysimple-form').show();
+                } else {
+                    $('#paysimple-form').hide();
+                }
+            });
 
-        $('#btnRequestPayment').click(function (e) {
-            e.preventDefault();
-            payment_gate = '';
-            if (document.getElementById('authorize_gate').checked) {
-                payment_gate = document.getElementById('authorize_gate').value;
-            }
-            if (document.getElementById('paysimple_gate').checked) {
-                payment_gate = document.getElementById('paysimple_gate').value;
-            }
-            $.ajax({
-                url: "/qbsa/api/paymentonline/requestPayment",
-                data: {
-                    amount: document.getElementById('amount').value,
-                    paymentgate: payment_gate,
-                    customer_id: document.getElementById('customer_id').value
-                },
-                method: 'POST',
-                timeout: 50000
-
-            }).done(function (data) {
-
-                responseObj = JSON.parse(data);
+            $('#btnRequestPayment').click(function (e) {
+                e.preventDefault();
+                payment_gate = '';
                 if (document.getElementById('authorize_gate').checked) {
-                    document.getElementById('hp_token').value = responseObj.hp_token;
-                    setTimeout(function () {
-                        $("#send_hptoken").submit();
-                    }, 100);
+                    payment_gate = document.getElementById('authorize_gate').value;
                 }
                 if (document.getElementById('paysimple_gate').checked) {
-                    loadPaysimpleJs(responseObj);
+                    payment_gate = document.getElementById('paysimple_gate').value;
                 }
+                $.ajax({
+                    url: "/qbsa/api/paymentonline/requestPayment",
+                    data: {
+                        amount: document.getElementById('amount').value,
+                        paymentgate: payment_gate,
+                        customer_id: document.getElementById('customer_id').value
+                    },
+                    method: 'POST',
+                    timeout: 50000
 
+                }).done(function (data) {
+
+                    responseObj = JSON.parse(data);
+                    if (document.getElementById('authorize_gate').checked) {
+                        document.getElementById('hp_token').value = responseObj.hp_token;
+                        setTimeout(function () {
+                            $("#send_hptoken").submit();
+                        }, 100);
+                    }
+                    if (document.getElementById('paysimple_gate').checked) {
+                        loadPaysimpleJs(responseObj);
+                    }
+
+                });
             });
-        });
-        $(document).ready(function () {
+            $('#paysimple-form').hide();
             $('ul.nav li a').click();
             $("#acceptJSReceiptModal").on('hide.bs.modal', function () {
                 location.reload();
