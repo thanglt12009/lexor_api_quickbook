@@ -71,12 +71,13 @@ public class PaymentOnlineController extends ApplicationController {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response getHtml(@Context final HttpServletRequest request) {
+        String qbchecked = request.getParameter("qbchecked");
 
-        if (!Utility.doRenew()) {
+        if (!Utility.doRenew() || qbchecked == null || qbchecked.trim().length() == 0) {
             try {
                 String url = request.getRequestURL().toString();
                 String query = request.getQueryString();
-                String reqString = url + "?" + query;
+                String reqString = url + "?" + query + "&qbchecked=true";
                 return Response.temporaryRedirect(new URI("/qbsa/api/auth?target=" + URLEncoder.encode(reqString, "UTF-8"))).build();
 //                return Response.temporaryRedirect(new URI("/qbsa/api/auth")).build();
             } catch (Exception ex) {
@@ -307,6 +308,9 @@ public class PaymentOnlineController extends ApplicationController {
                 }
             }
         }
+//        else {
+//            ErpUtility.doNotifyCompleteCustomerQB(customer_id, quickbook_customer_id, order_id);
+//        }
 
         Map<String, Object> paymentPayload = new HashMap<>();
         paymentPayload.put("TotalAmt", String.format("%.2f", amt));

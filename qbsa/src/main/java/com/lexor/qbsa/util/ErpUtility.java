@@ -7,12 +7,14 @@ package com.lexor.qbsa.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -135,16 +137,19 @@ public class ErpUtility {
         String response = "";
         HttpsURLConnection connection = null;
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("idCustomerERP", customerId);
-            payload.put("idCustomerQBO", qbCustomerId);
-            payload.put("idOrderERP", orderId);
-            String data = "";
-            try {
-                data = new ObjectMapper().writeValueAsString(payload);
-            } catch (Exception ex) {
-                LOG.log(Level.SEVERE, "{0}", ex);
-            }
+//            Map<String, Object> payload = new HashMap<>();
+//            payload.put("idCustomerERP", customerId);
+//            payload.put("idCustomerQBO", qbCustomerId);
+//            payload.put("idOrderERP", orderId);
+            String urlParameters  = "idCustomerERP=" + customerId + "&idCustomerQBO=" + qbCustomerId + "&idOrderERP=" + orderId;
+            byte[] postData       = urlParameters.getBytes( StandardCharsets.UTF_8 );
+            int    postDataLength = postData.length;
+//            String data = "";
+//            try {
+//                data = new ObjectMapper().writeValueAsString(payload);
+//            } catch (Exception ex) {
+//                LOG.log(Level.SEVERE, "{0}", ex);
+//            }
 //            URL url = new URL(apiHost + "/lxerp/api/qbservice/updateIdCustomerQBOToERP?idCustomerERP=" + customerId + "&idCustomerQBO=" + qbCustomerId + "&idOrderERP=" + orderId);
             URL url = new URL(apiHost + "/lxerp/api/qbservice/updateIdCustomerQBOToERP");
             connection = (HttpsURLConnection) url.openConnection();
@@ -152,12 +157,17 @@ public class ErpUtility {
             connection.setDoOutput(true);
             connection.setDoInput(true);
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("Accept", "application/json");
-            connection.setRequestProperty("Content-Type", "application/json;");
-            try (OutputStreamWriter osw = new OutputStreamWriter(connection.getOutputStream())) {
-                osw.write(String.format(data));
-                osw.flush();
-                osw.close();
+            connection.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded"); 
+            connection.setRequestProperty( "charset", "utf-8");
+            connection.setRequestProperty( "Content-Length", Integer.toString( postDataLength ));
+            connection.setUseCaches( false );
+//            try (OutputStreamWriter osw = new OutputStreamWriter(connection.getOutputStream())) {
+//                osw.write(String.format(data));
+//                osw.flush();
+//                osw.close();
+//            }
+            try( DataOutputStream wr = new DataOutputStream( connection.getOutputStream())) {
+                wr.write( postData );
             }
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
                 reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
